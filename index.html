@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calc Quest — Implicit & Optimization</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --border: #1e1e4a;
+      --primary: #00d4ff;
+      --secondary: #7c3aed;
+      --correct: #22c55e;
+      --wrong: #ef4444;
+      --warn: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 18px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Starfield */
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(ellipse at 20% 30%, #0d0d2b 0%, #0a0a1a 70%);
+      overflow: hidden;
+    }
+    #stars::before, #stars::after {
+      content: '';
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: white;
+      box-shadow:
+        80px 120px #fff, 200px 60px #fff, 340px 200px #fff, 450px 90px #fff,
+        560px 310px #fff, 640px 40px #fff, 730px 180px #fff, 820px 260px #fff,
+        900px 80px #fff, 1020px 340px #fff, 1100px 150px #fff, 1200px 50px #fff,
+        100px 400px #fff, 300px 480px #fff, 500px 420px #fff, 700px 500px #fff,
+        900px 450px #fff, 1100px 480px #fff, 150px 600px #fff, 400px 650px #fff,
+        650px 700px #fff, 850px 580px #fff, 50px 750px #fff, 1150px 620px #fff;
+      animation: twinkle 4s infinite alternate;
+    }
+    #stars::after {
+      width: 1px; height: 1px;
+      box-shadow:
+        160px 90px rgba(255,255,255,0.6), 280px 170px rgba(255,255,255,0.6),
+        390px 50px rgba(255,255,255,0.6), 510px 260px rgba(255,255,255,0.6),
+        620px 130px rgba(255,255,255,0.6), 750px 360px rgba(255,255,255,0.6),
+        870px 210px rgba(255,255,255,0.6), 980px 110px rgba(255,255,255,0.6),
+        1070px 290px rgba(255,255,255,0.6), 240px 550px rgba(255,255,255,0.6),
+        580px 530px rgba(255,255,255,0.6), 790px 640px rgba(255,255,255,0.6);
+      animation-duration: 6s;
+    }
+    @keyframes twinkle { from { opacity: 1; } to { opacity: 0.3; } }
+
+    /* Layout */
+    #app {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 780px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .screen { display: none; width: 100%; }
+    .screen.active { display: flex; flex-direction: column; align-items: center; gap: 24px; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+    }
+
+    /* Title */
+    .title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+      line-height: 1.1;
+      text-shadow: none;
+    }
+    .subtitle {
+      color: var(--muted);
+      text-align: center;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 14px 32px;
+      border-radius: 8px;
+      border: none;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #0080a0);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0,212,255,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(0,212,255,0.5); }
+    .btn-secondary {
+      background: linear-gradient(135deg, var(--secondary), #4c1d95);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(124,58,237,0.3);
+    }
+    .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(124,58,237,0.5); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+    .btn:active { transform: translateY(0) scale(0.98); }
+
+    /* Mode cards */
+    .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; }
+    .mode-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .mode-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,212,255,0.15); }
+    .mode-card .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .mode-card h3 { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--primary); margin-bottom: 8px; }
+    .mode-card p { color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+
+    /* Game HUD */
+    .hud {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; padding: 12px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .hud-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .hud-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .hud-value { font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--primary); }
+    .hud-value.warn { color: var(--warn); }
+    .hud-value.danger { color: var(--wrong); }
+
+    /* Timer ring */
+    .timer-ring { position: relative; width: 56px; height: 56px; }
+    .timer-ring svg { transform: rotate(-90deg); }
+    .timer-ring circle { transition: stroke-dashoffset 1s linear; }
+    .timer-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem; font-weight: 700;
+    }
+
+    /* Progress bar */
+    .progress-bar {
+      width: 100%; height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+    /* Question */
+    .question-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(0,212,255,0.1);
+      color: var(--primary);
+      border: 1px solid rgba(0,212,255,0.3);
+    }
+    .question-text {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .question-text .eq {
+      font-family: monospace;
+      background: rgba(0,212,255,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--primary);
+    }
+    .hint-box {
+      padding: 12px 16px;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      color: var(--warn);
+      font-size: 0.9rem;
+      display: none;
+    }
+    .hint-box.show { display: block; animation: fadeIn 0.3s ease; }
+
+    /* Options */
+    .options { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    .option-btn {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+      width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { border-color: var(--primary); background: rgba(0,212,255,0.05); }
+    .option-btn .opt-letter {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; flex-shrink: 0;
+      border-radius: 6px;
+      background: var(--border);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .option-btn.correct { border-color: var(--correct); background: rgba(34,197,94,0.1); }
+    .option-btn.correct .opt-letter { background: var(--correct); color: #000; }
+    .option-btn.wrong { border-color: var(--wrong); background: rgba(239,68,68,0.1); }
+    .option-btn.wrong .opt-letter { background: var(--wrong); color: #fff; }
+    .option-btn:disabled { cursor: default; }
+
+    /* Explanation */
+    .explanation {
+      padding: 16px;
+      background: rgba(0,212,255,0.05);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text);
+      display: none;
+    }
+    .explanation.show { display: block; animation: fadeIn 0.3s ease; }
+    .explanation strong { color: var(--primary); }
+
+    /* Lives */
+    .lives { display: flex; gap: 6px; }
+    .life { font-size: 1.2rem; filter: drop-shadow(0 0 4px rgba(239,68,68,0.5)); }
+    .life.lost { filter: grayscale(1) opacity(0.3); }
+
+    /* Score & results */
+    .score-ring {
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      border: 4px solid var(--border);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: var(--surface);
+      box-shadow: 0 0 40px rgba(0,212,255,0.2);
+    }
+    .score-ring .big { font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--primary); }
+    .score-ring .small { font-size: 0.75rem; color: var(--muted); letter-spacing: 2px; }
+
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; }
+    .result-stat {
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .result-stat .num { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; font-weight: 700; }
+    .result-stat .lbl { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .result-stat.green .num { color: var(--correct); }
+    .result-stat.red .num { color: var(--wrong); }
+    .result-stat.cyan .num { color: var(--primary); }
+
+    /* Grade badge */
+    .grade-badge {
+      padding: 8px 24px;
+      border-radius: 999px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .grade-A { background: rgba(34,197,94,0.15); color: var(--correct); border: 1px solid var(--correct); }
+    .grade-B { background: rgba(0,212,255,0.15); color: var(--primary); border: 1px solid var(--primary); }
+    .grade-C { background: rgba(245,158,11,0.15); color: var(--warn); border: 1px solid var(--warn); }
+    .grade-F { background: rgba(239,68,68,0.15); color: var(--wrong); border: 1px solid var(--wrong); }
+
+    /* Answer Key */
+    .ak-section { width: 100%; }
+    .ak-section h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.8rem;
+      color: var(--primary);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ak-item {
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .ak-item .ak-q { color: var(--text); font-size: 0.9rem; margin-bottom: 8px; line-height: 1.5; }
+    .ak-item .ak-a {
+      color: var(--correct);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .ak-item .ak-work {
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.7;
+      font-family: monospace;
+    }
+    .ak-toggle {
+      font-size: 0.75rem;
+      color: var(--primary);
+      cursor: pointer;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: 100%; }
+    .tab-btn {
+      flex: 1; padding: 12px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: rgba(0,212,255,0.1); color: var(--primary); }
+    .tab-btn:not(:last-child) { border-right: 1px solid var(--border); }
+
+    /* Combo */
+    .combo-banner {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--warn), #d97706);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 999px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 900;
+      z-index: 100;
+      animation: popIn 0.3s ease;
+      pointer-events: none;
+    }
+    @keyframes popIn { from { transform: translateX(-50%) scale(0.5); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+    /* Responsive */
+    @media (max-width: 540px) {
+      .title { font-size: 2rem; }
+      .mode-cards { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: 1fr 1fr; }
+      .card { padding: 20px; }
+    }
+
+    /* Demo cursor */
+    #demo-cursor {
+      position: fixed;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(0,212,255,0.7);
+      border: 2px solid #fff;
+      pointer-events: none;
+      z-index: 9999;
+      transition: left 0.4s ease, top 0.4s ease;
+      display: none;
+      box-shadow: 0 0 12px rgba(0,212,255,0.8);
+    }
+    #demo-cursor.click {
+      animation: clickPulse 0.3s ease;
+    }
+    @keyframes clickPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.5); background: rgba(255,200,0,0.8); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+<div id="stars"></div>
+<div id="demo-cursor"></div>
+<div id="app">
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="screen-home">
+    <div style="text-align:center;">
+      <div class="title">CALC QUEST</div>
+      <div class="subtitle" style="margin-top:8px;">Implicit Differentiation &amp; Optimization</div>
+    </div>
+    <div class="card" style="text-align:center; padding:28px 32px;">
+      <p style="color:var(--muted); font-size:0.95rem; line-height:1.6; margin-bottom:20px;">
+        Master calculus through real-world problems. Answer questions, earn points,
+        and prove your mastery of implicit differentiation and optimization.
+      </p>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="btn-play">▶ Play Game</button>
+        <button class="btn btn-secondary" id="btn-key">Answer Key</button>
+      </div>
+    </div>
+    <div style="display:flex; gap:24px; color:var(--muted); font-size:0.8rem; text-align:center;">
+      <div>📚 12 Problems</div>
+      <div>⏱ 30s Timer</div>
+      <div>❤️ 3 Lives</div>
+      <div>🏆 Score Points</div>
+    </div>
+  </div>
+
+  <!-- MODE SELECT SCREEN -->
+  <div class="screen" id="screen-mode">
+    <div style="text-align:center;">
+      <div class="title" style="font-size:2rem;">Choose Topic</div>
+      <div class="subtitle" style="margin-top:6px;">Select a subject to begin</div>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card" id="mode-implicit">
+        <div class="icon">∂</div>
+        <h3>Implicit Differentiation</h3>
+        <p>Find dy/dx for implicit equations, tangent lines, and related word problems.</p>
+        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">6 Problems</div>
+      </div>
+      <div class="mode-card" id="mode-optimization">
+        <div class="icon">📈</div>
+        <h3>Optimization</h3>
+        <p>Maximize area, minimize cost, and solve real-world applied optimization problems.</p>
+        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">6 Problems</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost" id="btn-back-home">← Back</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <div class="hud">
+      <div class="hud-item">
+        <div class="hud-label">Score</div>
+        <div class="hud-value" id="hud-score">0</div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Question</div>
+        <div class="hud-value" id="hud-qnum">1 / 6</div>
+      </div>
+      <div class="hud-item">
+        <div class="timer-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="#1e1e4a" stroke-width="4"/>
+            <circle id="timer-circle" cx="28" cy="28" r="24" fill="none"
+              stroke="#00d4ff" stroke-width="4"
+              stroke-dasharray="150.8"
+              stroke-dashoffset="0"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="timer-text" id="timer-text">30</div>
+        </div>
+      </div>
+      <div class="hud-item">
+        <div class="hud-label">Lives</div>
+        <div class="lives" id="lives-display">
+          <span class="life">❤️</span><span class="life">❤️</span><span class="life">❤️</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="card" id="question-card">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+        <span class="question-tag" id="q-tag">Implicit Differentiation</span>
+        <span style="font-size:0.75rem; color:var(--muted);" id="q-type-label">Standard</span>
+      </div>
+      <div class="question-text" id="question-text"></div>
+      <div class="hint-box" id="hint-box"></div>
+      <button id="btn-hint" style="margin-top:12px; font-size:0.75rem; color:var(--warn); background:none; border:none; cursor:pointer;">
+        💡 Show Hint (−25 pts)
+      </button>
+    </div>
+
+    <div class="options" id="options-container"></div>
+    <div class="explanation" id="explanation"></div>
+
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button class="btn btn-ghost" id="btn-next" style="display:none;">Next →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="screen-result">
+    <div id="result-title" class="title" style="font-size:1.8rem; text-align:center;">Round Complete!</div>
+    <div class="score-ring">
+      <div class="big" id="final-score">0</div>
+      <div class="small">POINTS</div>
+    </div>
+    <div id="grade-badge-wrap"></div>
+    <div class="result-grid">
+      <div class="result-stat green"><div class="num" id="stat-correct">0</div><div class="lbl">Correct</div></div>
+      <div class="result-stat red"><div class="num" id="stat-wrong">0</div><div class="lbl">Wrong</div></div>
+      <div class="result-stat cyan"><div class="num" id="stat-streak">0</div><div class="lbl">Best Streak</div></div>
+      <div class="result-stat"><div class="num" id="stat-time">0s</div><div class="lbl">Avg Time</div></div>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+      <button class="btn btn-primary" id="btn-play-again">↺ Play Again</button>
+      <button class="btn btn-secondary" id="btn-other-topic">Switch Topic</button>
+      <button class="btn btn-ghost" id="btn-result-key">Answer Key</button>
+    </div>
+  </div>
+
+  <!-- ANSWER KEY SCREEN -->
+  <div class="screen" id="screen-key">
+    <div style="text-align:center;">
+      <div class="title" style="font-size:1.8rem;">Answer Key</div>
+      <div class="subtitle" style="margin-top:6px;">Full solutions and worked examples</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-implicit" onclick="switchTab('implicit')">Implicit Diff.</button>
+      <button class="tab-btn" id="tab-optimization" onclick="switchTab('optimization')">Optimization</button>
+    </div>
+    <div id="key-content" style="width:100%;"></div>
+    <button class="btn btn-ghost" id="btn-back-key">← Back</button>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// QUESTION DATA
+// ─────────────────────────────────────────────
+const QUESTIONS = {
+  implicit: [
+    {
+      type: "Standard",
+      question: `Find <span class="eq">dy/dx</span> for the equation: <span class="eq">x² + y² = 25</span>`,
+      options: ["−x / y", "x / y", "−y / x", "y / x"],
+      correct: 0,
+      explanation: `Differentiate both sides w.r.t. x:<br>
+        <strong>2x + 2y(dy/dx) = 0</strong><br>
+        Solve: 2y(dy/dx) = −2x<br>
+        ∴ <strong>dy/dx = −x/y</strong>`,
+      hint: "Differentiate both sides with respect to x. d/dx[y²] = 2y·(dy/dx) by the chain rule."
+    },
+    {
+      type: "Standard",
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">x³ + y³ = 8</span>`,
+      options: ["−x² / y²", "x² / y²", "−3x / 3y", "y² / x²"],
+      correct: 0,
+      explanation: `Differentiate both sides:<br>
+        <strong>3x² + 3y²(dy/dx) = 0</strong><br>
+        Solve: 3y²(dy/dx) = −3x²<br>
+        ∴ <strong>dy/dx = −x²/y²</strong>`,
+      hint: "Apply the power rule to each term. Remember d/dx[y³] = 3y²·(dy/dx)."
+    },
+    {
+      type: "Standard",
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">xy = 10</span>`,
+      options: ["−y / x", "y / x", "−x / y", "x / y"],
+      correct: 0,
+      explanation: `Use the product rule on the left side:<br>
+        <strong>d/dx[xy] = y + x(dy/dx) = 0</strong><br>
+        Solve: x(dy/dx) = −y<br>
+        ∴ <strong>dy/dx = −y/x</strong>`,
+      hint: "Apply the product rule to xy: d/dx[xy] = y·(1) + x·(dy/dx)."
+    },
+    {
+      type: "Standard",
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">x² − 3xy + y² = 7</span>`,
+      options: ["(3y − 2x) / (2y − 3x)", "(2x − 3y) / (3x − 2y)", "(2x + 3y) / (2y + 3x)", "−(2x − 3y) / (2y − 3x)"],
+      correct: 0,
+      explanation: `Differentiate term by term:<br>
+        <strong>2x − 3[y + x(dy/dx)] + 2y(dy/dx) = 0</strong><br>
+        Group dy/dx terms: dy/dx(2y − 3x) = 3y − 2x<br>
+        ∴ <strong>dy/dx = (3y − 2x) / (2y − 3x)</strong>`,
+      hint: "For the −3xy term, apply the product rule: d/dx[−3xy] = −3[y + x·(dy/dx)]."
+    },
+    {
+      type: "Word Problem",
+      question: `A circular tunnel has cross-section <span class="eq">x² + y² = 169</span>.
+        An engineer needs the slope of the tunnel wall at the point <span class="eq">(5, 12)</span>.
+        What is the slope at that point?`,
+      options: ["−5/12", "5/12", "−12/5", "12/5"],
+      correct: 0,
+      explanation: `Differentiate implicitly: 2x + 2y(dy/dx) = 0 → dy/dx = −x/y<br>
+        At (5, 12): <strong>dy/dx = −5/12</strong><br>
+        The wall has a gentle negative slope at that point.`,
+      hint: "First find the general dy/dx formula, then substitute the given point (5, 12)."
+    },
+    {
+      type: "Word Problem",
+      question: `Two cars leave the same intersection. Car A travels <strong>east at 60 mph</strong> and Car B
+        travels <strong>north at 80 mph</strong>. Their distance satisfies <span class="eq">D² = x² + y²</span>.
+        When <span class="eq">x = 3 mi</span> and <span class="eq">y = 4 mi</span>, how fast is the distance between them growing?`,
+      options: ["100 mph", "140 mph", "80 mph", "50 mph"],
+      correct: 0,
+      explanation: `Differentiate D² = x² + y² with respect to t:<br>
+        <strong>2D(dD/dt) = 2x(dx/dt) + 2y(dy/dt)</strong><br>
+        D = √(9+16) = 5 mi; substitute:<br>
+        2(5)(dD/dt) = 2(3)(60) + 2(4)(80) = 360 + 640 = 1000<br>
+        ∴ <strong>dD/dt = 100 mph</strong>`,
+      hint: "This is a related rates problem. Differentiate both sides with respect to time t. Use the 3-4-5 triangle to find D."
+    }
+  ],
+
+  optimization: [
+    {
+      type: "Standard",
+      question: `Find two positive numbers whose sum is <span class="eq">20</span> and whose
+        <strong>product is maximized</strong>. What are the two numbers?`,
+      options: ["10 and 10", "5 and 15", "8 and 12", "1 and 19"],
+      correct: 0,
+      explanation: `Let the numbers be x and 20−x. Maximize P = x(20−x).<br>
+        <strong>dP/dx = 20 − 2x = 0 → x = 10</strong><br>
+        Second derivative: d²P/dx² = −2 < 0 ✓ (maximum)<br>
+        ∴ The numbers are <strong>10 and 10</strong>.`,
+      hint: "If the two numbers are x and (20−x), set up a product function P(x) = x(20−x) and find its critical point."
+    },
+    {
+      type: "Word Problem",
+      question: `A farmer has <strong>400 feet of fence</strong> to enclose a rectangular field along a river.
+        No fence is needed on the river side. What dimensions
+        <strong>maximize the enclosed area</strong>?`,
+      options: ["Width 100 ft, Length 200 ft", "Width 150 ft, Length 100 ft", "Width 50 ft, Length 300 ft", "Width 200 ft, Length 200 ft"],
+      correct: 0,
+      explanation: `Let w = width (2 sides), l = length (1 side).<br>
+        Constraint: <strong>2w + l = 400 → l = 400 − 2w</strong><br>
+        Area: A = wl = w(400 − 2w) = 400w − 2w²<br>
+        <strong>dA/dw = 400 − 4w = 0 → w = 100 ft</strong><br>
+        l = 400 − 200 = 200 ft. Max area = 20,000 ft².`,
+      hint: "Only 3 sides need fencing (2 widths + 1 length). Write the area as a function of one variable, then differentiate."
+    },
+    {
+      type: "Word Problem",
+      question: `An open box is made from a <strong>12×12 inch</strong> cardboard sheet by cutting equal
+        squares from each corner and folding up the sides.
+        What size corners maximize the box's volume?`,
+      options: ["2 inches", "3 inches", "4 inches", "1 inch"],
+      correct: 0,
+      explanation: `Let cut size = x. Box: base = (12−2x), height = x.<br>
+        <strong>V = x(12−2x)²</strong><br>
+        dV/dx = (12−2x)² + x·2(12−2x)(−2) = (12−2x)(12−6x)<br>
+        Setting to 0: x = 6 (trivial) or <strong>x = 2 inches</strong><br>
+        Max volume = 2(8)² = 128 in³.`,
+      hint: "If you cut squares of side x, the base becomes (12−2x) and height is x. Expand V = x(12−2x)² then differentiate."
+    },
+    {
+      type: "Standard",
+      question: `A rectangle has a <strong>perimeter of 40 cm</strong>.
+        What dimensions give the <strong>maximum area</strong>?`,
+      options: ["10 cm × 10 cm", "8 cm × 12 cm", "5 cm × 15 cm", "6 cm × 14 cm"],
+      correct: 0,
+      explanation: `Perimeter: 2l + 2w = 40 → l = 20 − w.<br>
+        Area: <strong>A = w(20−w) = 20w − w²</strong><br>
+        dA/dw = 20 − 2w = 0 → w = 10 cm, l = 10 cm.<br>
+        ∴ A square <strong>10 × 10 cm</strong> gives maximum area = 100 cm².`,
+      hint: "Express area A in terms of one variable using the perimeter constraint, then find the critical point."
+    },
+    {
+      type: "Word Problem",
+      question: `A company sells <span class="eq">x</span> units at price <span class="eq">p = 50 − 0.5x</span> dollars.
+        Production costs are <span class="eq">C(x) = 10x + 200</span>.
+        What quantity <strong>maximizes profit</strong>?`,
+      options: ["40 units", "50 units", "25 units", "80 units"],
+      correct: 0,
+      explanation: `Revenue: R = xp = x(50−0.5x) = 50x − 0.5x²<br>
+        Profit: <strong>P = R − C = 40x − 0.5x² − 200</strong><br>
+        dP/dx = 40 − x = 0 → <strong>x = 40 units</strong><br>
+        Max profit = 40(40) − 0.5(1600) − 200 = $600.`,
+      hint: "Profit = Revenue − Cost. Write both in terms of x, combine, then differentiate and set equal to zero."
+    },
+    {
+      type: "Word Problem",
+      question: `Find the point on the parabola <span class="eq">y = x²</span> that is
+        <strong>closest to the point (3, 0)</strong>.`,
+      options: ["(1, 1)", "(2, 4)", "(0, 0)", "(3, 9)"],
+      correct: 0,
+      explanation: `Minimize D² = (x−3)² + (x²−0)² = (x−3)² + x⁴<br>
+        <strong>d(D²)/dx = 2(x−3) + 4x³ = 4x³ + 2x − 6</strong><br>
+        Test x = 1: 4(1) + 2 − 6 = 0 ✓<br>
+        So x = 1, y = 1² = 1. Closest point: <strong>(1, 1)</strong>.`,
+      hint: "Minimize the squared distance D² = (x−3)² + (y−0)². Substitute y = x² to get D² in terms of x only."
+    }
+  ]
+};
+
+// ─────────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────────
+let state = {
+  mode: null,
+  qIndex: 0,
+  score: 0,
+  lives: 3,
+  timeLeft: 30,
+  timerInterval: null,
+  hintUsed: false,
+  correctCount: 0,
+  wrongCount: 0,
+  streak: 0,
+  bestStreak: 0,
+  timesPerQ: [],
+  qStartTime: 0,
+  answered: false,
+  demoMode: false,
+  demoStep: 0
+};
+
+// ─────────────────────────────────────────────
+// SCREENS
+// ─────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ─────────────────────────────────────────────
+// HOME
+// ─────────────────────────────────────────────
+document.getElementById('btn-play').addEventListener('click', () => showScreen('screen-mode'));
+document.getElementById('btn-key').addEventListener('click', () => { renderAnswerKey('implicit'); showScreen('screen-key'); });
+document.getElementById('btn-back-home').addEventListener('click', () => showScreen('screen-home'));
+document.getElementById('btn-back-key').addEventListener('click', () => showScreen('screen-home'));
+document.getElementById('btn-result-key').addEventListener('click', () => { renderAnswerKey('implicit'); showScreen('screen-key'); });
+
+document.getElementById('mode-implicit').addEventListener('click', () => startGame('implicit'));
+document.getElementById('mode-optimization').addEventListener('click', () => startGame('optimization'));
+
+document.getElementById('btn-play-again').addEventListener('click', () => startGame(state.mode));
+document.getElementById('btn-other-topic').addEventListener('click', () => showScreen('screen-mode'));
+
+// ─────────────────────────────────────────────
+// START GAME
+// ─────────────────────────────────────────────
+function startGame(mode) {
+  state = {
+    mode,
+    qIndex: 0,
+    score: 0,
+    lives: 3,
+    timeLeft: 30,
+    timerInterval: null,
+    hintUsed: false,
+    correctCount: 0,
+    wrongCount: 0,
+    streak: 0,
+    bestStreak: 0,
+    timesPerQ: [],
+    qStartTime: Date.now(),
+    answered: false,
+    demoMode: state.demoMode,
+    demoStep: state.demoStep
+  };
+  updateHUD();
+  renderLives();
+  showScreen('screen-game');
+  loadQuestion();
+}
+
+// ─────────────────────────────────────────────
+// LOAD QUESTION
+// ─────────────────────────────────────────────
+function loadQuestion() {
+  const qs = QUESTIONS[state.mode];
+  const q = qs[state.qIndex];
+  state.answered = false;
+  state.hintUsed = false;
+  state.timeLeft = 30;
+  state.qStartTime = Date.now();
+
+  document.getElementById('q-tag').textContent =
+    state.mode === 'implicit' ? 'Implicit Differentiation' : 'Optimization';
+  document.getElementById('q-type-label').textContent = q.type;
+  document.getElementById('question-text').innerHTML = q.question;
+  document.getElementById('hint-box').classList.remove('show');
+  document.getElementById('hint-box').textContent = '';
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('explanation').innerHTML = '';
+  document.getElementById('btn-next').style.display = 'none';
+
+  // Progress
+  const pct = (state.qIndex / qs.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('hud-qnum').textContent = `${state.qIndex + 1} / ${qs.length}`;
+
+  // Options
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => handleAnswer(i));
+    container.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+// ─────────────────────────────────────────────
+// TIMER
+// ─────────────────────────────────────────────
+function startTimer() {
+  clearInterval(state.timerInterval);
+  updateTimerUI();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerUI();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      if (!state.answered) handleAnswer(-1); // timeout
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const circle = document.getElementById('timer-circle');
+  const text = document.getElementById('timer-text');
+  const max = 150.8;
+  const offset = max - (state.timeLeft / 30) * max;
+  circle.style.strokeDashoffset = offset;
+
+  const color = state.timeLeft > 15 ? '#00d4ff' : state.timeLeft > 7 ? '#f59e0b' : '#ef4444';
+  circle.style.stroke = color;
+  text.style.color = color;
+  text.textContent = state.timeLeft;
+}
+
+// ─────────────────────────────────────────────
+// ANSWER
+// ─────────────────────────────────────────────
+function handleAnswer(chosen) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(state.timerInterval);
+
+  const elapsed = Math.round((Date.now() - state.qStartTime) / 1000);
+  state.timesPerQ.push(elapsed);
+
+  const q = QUESTIONS[state.mode][state.qIndex];
+  const isCorrect = chosen === q.correct;
+  const optBtns = document.querySelectorAll('.option-btn');
+
+  optBtns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === chosen && !isCorrect) btn.classList.add('wrong');
+  });
+
+  if (isCorrect) {
+    const timeBonus = Math.max(0, state.timeLeft * 2);
+    const hintPenalty = state.hintUsed ? 25 : 0;
+    const points = 100 + timeBonus - hintPenalty;
+    state.score += points;
+    state.correctCount++;
+    state.streak++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    if (state.streak >= 3) showComboBanner(state.streak);
+  } else if (chosen === -1) {
+    // timeout
+    state.wrongCount++;
+    state.streak = 0;
+    state.lives--;
+    renderLives();
+  } else {
+    state.score = Math.max(0, state.score - 25);
+    state.wrongCount++;
+    state.streak = 0;
+    state.lives--;
+    renderLives();
+  }
+
+  updateHUD();
+
+  // Show explanation
+  const expEl = document.getElementById('explanation');
+  expEl.innerHTML = `<strong>${isCorrect ? '✅ Correct!' : chosen === -1 ? '⏰ Time Up!' : '❌ Wrong!'}</strong><br><br>${q.explanation}`;
+  expEl.classList.add('show');
+
+  document.getElementById('btn-next').style.display = 'inline-flex';
+}
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (state.lives <= 0) { endGame(); return; }
+  state.qIndex++;
+  if (state.qIndex >= QUESTIONS[state.mode].length) {
+    endGame();
+  } else {
+    loadQuestion();
+  }
+});
+
+// ─────────────────────────────────────────────
+// HINT
+// ─────────────────────────────────────────────
+document.getElementById('btn-hint').addEventListener('click', () => {
+  if (state.hintUsed || state.answered) return;
+  state.hintUsed = true;
+  const q = QUESTIONS[state.mode][state.qIndex];
+  const hintEl = document.getElementById('hint-box');
+  hintEl.textContent = '💡 Hint: ' + q.hint;
+  hintEl.classList.add('show');
+  document.getElementById('btn-hint').style.opacity = '0.4';
+  document.getElementById('btn-hint').style.pointerEvents = 'none';
+});
+
+// ─────────────────────────────────────────────
+// HUD / LIVES
+// ─────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById('hud-score').textContent = state.score.toLocaleString();
+}
+
+function renderLives() {
+  const el = document.getElementById('lives-display');
+  el.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const span = document.createElement('span');
+    span.className = 'life' + (i >= state.lives ? ' lost' : '');
+    span.textContent = '❤️';
+    el.appendChild(span);
+  }
+}
+
+// ─────────────────────────────────────────────
+// COMBO BANNER
+// ─────────────────────────────────────────────
+function showComboBanner(streak) {
+  const b = document.createElement('div');
+  b.className = 'combo-banner';
+  b.textContent = `🔥 ${streak}x COMBO!`;
+  document.body.appendChild(b);
+  setTimeout(() => b.remove(), 2000);
+}
+
+// ─────────────────────────────────────────────
+// END GAME
+// ─────────────────────────────────────────────
+function endGame() {
+  clearInterval(state.timerInterval);
+  const total = QUESTIONS[state.mode].length;
+  const pct = Math.round((state.correctCount / total) * 100);
+  const avgTime = state.timesPerQ.length
+    ? Math.round(state.timesPerQ.reduce((a, b) => a + b, 0) / state.timesPerQ.length)
+    : 0;
+
+  document.getElementById('final-score').textContent = state.score.toLocaleString();
+  document.getElementById('stat-correct').textContent = state.correctCount;
+  document.getElementById('stat-wrong').textContent = state.wrongCount;
+  document.getElementById('stat-streak').textContent = state.bestStreak;
+  document.getElementById('stat-time').textContent = avgTime + 's';
+
+  const gradeEl = document.getElementById('grade-badge-wrap');
+  let grade, gradeClass;
+  if (pct >= 90) { grade = 'A — Excellent!'; gradeClass = 'grade-A'; }
+  else if (pct >= 75) { grade = 'B — Good Job!'; gradeClass = 'grade-B'; }
+  else if (pct >= 60) { grade = 'C — Keep Practicing'; gradeClass = 'grade-C'; }
+  else { grade = 'F — Try Again!'; gradeClass = 'grade-F'; }
+  gradeEl.innerHTML = `<span class="grade-badge ${gradeClass}">${grade}</span>`;
+
+  document.getElementById('result-title').textContent =
+    state.lives <= 0 ? 'Game Over!' : 'Round Complete!';
+
+  showScreen('screen-result');
+}
+
+// ─────────────────────────────────────────────
+// ANSWER KEY
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-implicit').classList.toggle('active', tab === 'implicit');
+  document.getElementById('tab-optimization').classList.toggle('active', tab === 'optimization');
+  renderAnswerKey(tab);
+}
+
+function renderAnswerKey(tab) {
+  const qs = QUESTIONS[tab];
+  const label = tab === 'implicit' ? 'Implicit Differentiation' : 'Optimization';
+  let html = `<div class="ak-section"><h3>${label} — ${qs.length} Problems</h3>`;
+  qs.forEach((q, i) => {
+    html += `
+      <div class="ak-item">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-family:'Orbitron',sans-serif; font-size:0.7rem; color:var(--primary);">Q${i+1}</span>
+          <span style="font-size:0.7rem; color:var(--muted); text-transform:uppercase;">${q.type}</span>
+        </div>
+        <div class="ak-q">${q.question}</div>
+        <div class="ak-a">✅ Answer: ${q.options[q.correct]}</div>
+        <button class="ak-toggle" onclick="toggleWork(this)">▼ Show Solution</button>
+        <div class="ak-work" style="display:none;">${q.explanation.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '')}</div>
+      </div>`;
+  });
+  html += '</div>';
+  document.getElementById('key-content').innerHTML = html;
+}
+
+function toggleWork(btn) {
+  const work = btn.nextElementSibling;
+  const isOpen = work.style.display !== 'none';
+  work.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '▼ Show Solution' : '▲ Hide Solution';
+}
+
+// ─────────────────────────────────────────────
+// DEMO MODE
+// ─────────────────────────────────────────────
+const cursor = document.getElementById('demo-cursor');
+
+function moveCursor(el, cb) {
+  const rect = el.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  cursor.style.left = x + 'px';
+  cursor.style.top = y + 'px';
+  setTimeout(() => {
+    cursor.classList.add('click');
+    setTimeout(() => { cursor.classList.remove('click'); if (cb) cb(); }, 300);
+  }, 500);
+}
+
+const demoSequence = [
+  // Step 0: click Play
+  () => { moveCursor(document.getElementById('btn-play'), () => document.getElementById('btn-play').click()); },
+  // Step 1: click Implicit mode
+  () => { moveCursor(document.getElementById('mode-implicit'), () => document.getElementById('mode-implicit').click()); },
+  // Steps 2-7: answer implicit questions
+  ...Array.from({length: 6}, (_, i) => () => {
+    const optBtns = document.querySelectorAll('.option-btn');
+    if (optBtns.length > 0) {
+      moveCursor(optBtns[0], () => optBtns[0].click());
+    }
+  }),
+  // Steps 8-13: click Next after each answer
+  ...Array.from({length: 6}, () => () => {
+    const nextBtn = document.getElementById('btn-next');
+    if (nextBtn && nextBtn.style.display !== 'none') {
+      moveCursor(nextBtn, () => nextBtn.click());
+    }
+  }),
+  // Step 14: On result, go to answer key
+  () => {
+    const btn = document.getElementById('btn-result-key');
+    if (btn) moveCursor(btn, () => btn.click());
+  },
+  // Step 15: switch to optimization tab
+  () => {
+    moveCursor(document.getElementById('tab-optimization'), () => switchTab('optimization'));
+  },
+  // Step 16: back
+  () => {
+    moveCursor(document.getElementById('btn-back-key'), () => document.getElementById('btn-back-key').click());
+  }
+];
+
+let demoIdx = 0;
+let demoTimer = null;
+
+function runDemo() {
+  state.demoMode = true;
+  cursor.style.display = 'block';
+  cursor.style.left = '50%';
+  cursor.style.top = '50%';
+  demoIdx = 0;
+  nextDemoStep();
+}
+
+function nextDemoStep() {
+  if (demoIdx >= demoSequence.length) {
+    cursor.style.display = 'none';
+    state.demoMode = false;
+    return;
+  }
+  demoTimer = setTimeout(() => {
+    const fn = demoSequence[demoIdx];
+    // Interleave: for question steps we need to account for answer then next
+    if (demoIdx >= 2 && demoIdx < 8) {
+      fn();
+      demoIdx++;
+      // wait for explanation, then click next
+      demoTimer = setTimeout(() => {
+        const nextBtn = document.getElementById('btn-next');
+        if (nextBtn && nextBtn.style.display !== 'none') {
+          moveCursor(nextBtn, () => {
+            nextBtn.click();
+            demoIdx++;
+            nextDemoStep();
+          });
+        } else {
+          demoIdx++;
+          nextDemoStep();
+        }
+      }, 2800);
+      return;
+    }
+    fn();
+    demoIdx++;
+    nextDemoStep();
+  }, demoIdx === 0 ? 800 : 1800);
+}
+
+// Keyboard shortcut: press D to start demo
+document.addEventListener('keydown', e => {
+  if (e.key === 'd' || e.key === 'D') runDemo();
+});
+
+// URL param: ?demo=1
+if (new URLSearchParams(window.location.search).get('demo') === '1') {
+  setTimeout(runDemo, 1000);
+}
+</script>
+</body>
+</html>
