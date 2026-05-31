@@ -459,8 +459,8 @@
       </div>
     </div>
     <div style="display:flex; gap:24px; color:var(--muted); font-size:0.8rem; text-align:center;">
-      <div>📚 12 Problems</div>
-      <div>⏱ 30s Timer</div>
+      <div>📚 24 Problems</div>
+      <div>⏱ Scaled Timer</div>
       <div>❤️ 3 Lives</div>
       <div>🏆 Score Points</div>
     </div>
@@ -477,13 +477,13 @@
         <div class="icon">∂</div>
         <h3>Implicit Differentiation</h3>
         <p>Find dy/dx for implicit equations, tangent lines, and related word problems.</p>
-        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">6 Problems</div>
+        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">12 Problems</div>
       </div>
       <div class="mode-card" id="mode-optimization">
         <div class="icon">📈</div>
         <h3>Optimization</h3>
         <p>Maximize area, minimize cost, and solve real-world applied optimization problems.</p>
-        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">6 Problems</div>
+        <div style="margin-top:12px; font-size:0.75rem; color:var(--muted);">12 Problems</div>
       </div>
     </div>
     <button class="btn btn-ghost" id="btn-back-home">← Back</button>
@@ -655,6 +655,94 @@ const QUESTIONS = {
         2(5)(dD/dt) = 2(3)(60) + 2(4)(80) = 360 + 640 = 1000<br>
         ∴ <strong>dD/dt = 100 mph</strong>`,
       hint: "This is a related rates problem. Differentiate both sides with respect to time t. Use the 3-4-5 triangle to find D."
+    },
+    // ── HARD QUESTIONS ──
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">sin(xy) = x</span>`,
+      options: ["(1 − y·cos(xy)) / (x·cos(xy))", "cos(xy) / x", "1 / cos(xy)", "x·cos(xy) − y"],
+      correct: 0,
+      explanation: `Differentiate both sides w.r.t. x using the chain rule:<br>
+        <strong>cos(xy) · d/dx[xy] = 1</strong><br>
+        cos(xy) · (y + x·dy/dx) = 1<br>
+        y·cos(xy) + x·cos(xy)·dy/dx = 1<br>
+        x·cos(xy)·dy/dx = 1 − y·cos(xy)<br>
+        ∴ <strong>dy/dx = (1 − y·cos(xy)) / (x·cos(xy))</strong>`,
+      hint: "Use the chain rule on sin(xy). The derivative of xy uses the product rule: d/dx[xy] = y + x·(dy/dx)."
+    },
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">eˣʸ = x + y</span>`,
+      options: ["(1 − y·eˣʸ) / (x·eˣʸ − 1)", "(1 + y·eˣʸ) / (x·eˣʸ)", "eˣʸ / (x + y)", "y·eˣʸ − 1"],
+      correct: 0,
+      explanation: `Differentiate both sides w.r.t. x:<br>
+        <strong>eˣʸ · (y + x·dy/dx) = 1 + dy/dx</strong><br>
+        y·eˣʸ + x·eˣʸ·dy/dx = 1 + dy/dx<br>
+        dy/dx(x·eˣʸ − 1) = 1 − y·eˣʸ<br>
+        ∴ <strong>dy/dx = (1 − y·eˣʸ) / (x·eˣʸ − 1)</strong>`,
+      hint: "Differentiate eˣʸ using the chain rule. The exponent xy needs the product rule."
+    },
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `Find <span class="eq">dy/dx</span> for: <span class="eq">ln(x + y) = x²y</span>`,
+      options: ["(2xy(x+y) − 1) / (1 − x²(x+y))", "1 / (x + y)", "2xy − x²", "(1 − 2xy) / (x² + 1)"],
+      correct: 0,
+      explanation: `Differentiate both sides w.r.t. x:<br>
+        <strong>(1 + dy/dx) / (x + y) = 2xy + x²·dy/dx</strong><br>
+        1 + dy/dx = (x+y)(2xy + x²·dy/dx)<br>
+        1 + dy/dx = 2xy(x+y) + x²(x+y)·dy/dx<br>
+        dy/dx − x²(x+y)·dy/dx = 2xy(x+y) − 1<br>
+        dy/dx[1 − x²(x+y)] = 2xy(x+y) − 1<br>
+        ∴ <strong>dy/dx = (2xy(x+y) − 1) / (1 − x²(x+y))</strong>`,
+      hint: "Differentiate ln(x+y) as (1+dy/dx)/(x+y). Use the product rule on x²y."
+    },
+    {
+      type: "Hard — Word Problem",
+      difficulty: 4,
+      question: `An elliptical race track is modeled by <span class="eq">x²/100 + y²/36 = 1</span>.
+        A camera follows a car at point <span class="eq">(8, 3.6)</span>.
+        Find the slope of the track at that point to aim the camera.`,
+      options: ["−9/20", "−20/9", "9/20", "−3.6/8"],
+      correct: 0,
+      explanation: `Differentiate the ellipse implicitly:<br>
+        <strong>2x/100 + 2y·(dy/dx)/36 = 0</strong><br>
+        x/50 + y·(dy/dx)/18 = 0<br>
+        dy/dx = −18x / (50y) = −9x / (25y)<br>
+        At (8, 3.6): dy/dx = −9(8) / (25·3.6) = −72/90<br>
+        ∴ <strong>dy/dx = −9/20 = −0.45</strong>`,
+      hint: "Differentiate x²/100 + y²/36 = 1 implicitly to get dy/dx in terms of x and y, then plug in the point."
+    },
+    {
+      type: "Hard — Word Problem",
+      difficulty: 4,
+      question: `A balloon rises at <strong>3 m/s</strong> from a point 100 m from an observer on the ground.
+        The relationship is <span class="eq">tan(θ) = y/100</span> where θ is the angle of elevation.
+        How fast is the angle θ changing when the balloon is <span class="eq">100 m</span> high?`,
+      options: ["3/200 rad/s", "3/100 rad/s", "1/200 rad/s", "3 rad/s"],
+      correct: 0,
+      explanation: `Differentiate tan(θ) = y/100 w.r.t. time t:<br>
+        <strong>sec²(θ) · dθ/dt = (1/100) · dy/dt</strong><br>
+        When y = 100: tan(θ) = 100/100 = 1, so θ = π/4, sec²(π/4) = 2<br>
+        2 · dθ/dt = (1/100)(3) = 3/100<br>
+        ∴ <strong>dθ/dt = 3/200 rad/s</strong>`,
+      hint: "Differentiate both sides w.r.t. time. Remember sec²(θ) = 1 + tan²(θ). When y = 100 and x = 100, tan(θ) = 1."
+    },
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `Find <span class="eq">d²y/dx²</span> (second derivative) for the circle <span class="eq">x² + y² = 25</span> at the point <span class="eq">(3, 4)</span>.`,
+      options: ["−25/64", "−3/4", "25/64", "−9/16"],
+      correct: 0,
+      explanation: `First: dy/dx = −x/y. For the second derivative:<br>
+        <strong>d²y/dx² = d/dx[−x/y] = −(y − x·dy/dx) / y²</strong><br>
+        Substitute dy/dx = −x/y:<br>
+        = −(y − x(−x/y)) / y² = −(y + x²/y) / y²<br>
+        = −(y² + x²) / y³ = −25/y³<br>
+        At (3,4): <strong>d²y/dx² = −25/64</strong>`,
+      hint: "First find dy/dx = −x/y, then use the quotient rule to find d²y/dx². Substitute the first derivative back in."
     }
   ],
 
@@ -735,6 +823,97 @@ const QUESTIONS = {
         Test x = 1: 4(1) + 2 − 6 = 0 ✓<br>
         So x = 1, y = 1² = 1. Closest point: <strong>(1, 1)</strong>.`,
       hint: "Minimize the squared distance D² = (x−3)² + (y−0)². Substitute y = x² to get D² in terms of x only."
+    },
+    // ── HARD QUESTIONS ──
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `A cylinder is inscribed in a sphere of radius <span class="eq">R = 5</span>.
+        What height of the cylinder <strong>maximizes its volume</strong>?`,
+      options: ["10√3/3 ≈ 5.77", "10", "5", "5√2 ≈ 7.07"],
+      correct: 0,
+      explanation: `Let h = height, r = cylinder radius. From the sphere: r² + (h/2)² = R² = 25<br>
+        So r² = 25 − h²/4. Volume: <strong>V = πr²h = π(25 − h²/4)h = 25πh − πh³/4</strong><br>
+        dV/dh = 25π − 3πh²/4 = 0<br>
+        h² = 100/3 → <strong>h = 10/√3 = 10√3/3 ≈ 5.77</strong><br>
+        d²V/dh² = −3πh/2 < 0 ✓ (maximum)`,
+      hint: "Use the sphere constraint r² + (h/2)² = R² to eliminate r from the volume formula V = πr²h."
+    },
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `A printed page must have <strong>72 cm² of printed area</strong>. Margins are 2 cm on
+        each side and 3 cm on top and bottom. What page dimensions <strong>minimize total paper</strong> used?`,
+      options: ["Width 4+4√3, Height 6+6√3", "12 × 12", "10 × 14", "8 × 18"],
+      correct: 0,
+      explanation: `Let printed area be w × h = 72, so h = 72/w.<br>
+        Page width = w+4, page height = h+6 = 72/w + 6.<br>
+        <strong>A = (w+4)(72/w + 6) = 72 + 6w + 288/w + 24</strong><br>
+        dA/dw = 6 − 288/w² = 0 → w² = 48 → w = 4√3<br>
+        h = 72/(4√3) = 6√3. Page: <strong>(4+4√3) × (6+6√3)</strong>`,
+      hint: "Express total page area as (w+4)(72/w + 6) where w is the print width. Expand, differentiate, and set to zero."
+    },
+    {
+      type: "Hard — Word Problem",
+      difficulty: 4,
+      question: `A wire of length <strong>60 cm</strong> is cut into two pieces. One piece is bent into a <strong>circle</strong>
+        and the other into a <strong>square</strong>. Where should the wire be cut to <strong>minimize total area</strong>?`,
+      options: ["60π/(π+4) ≈ 26.4 cm for circle", "30 cm each", "All for circle", "All for square"],
+      correct: 0,
+      explanation: `Let x = wire for circle, 60−x = wire for square.<br>
+        Circle: r = x/(2π), area = πr² = x²/(4π)<br>
+        Square: side = (60−x)/4, area = (60−x)²/16<br>
+        <strong>A = x²/(4π) + (60−x)²/16</strong><br>
+        dA/dx = x/(2π) − (60−x)/8 = 0<br>
+        8x = 2π(60−x) → 8x = 120π − 2πx<br>
+        x(8+2π) = 120π → <strong>x = 60π/(π+4) ≈ 26.4 cm</strong>`,
+      hint: "Set up area as a function of x (wire length for circle). Area of circle = (x/2π)²·π. Area of square = ((60−x)/4)²."
+    },
+    {
+      type: "Hard — Word Problem",
+      difficulty: 4,
+      question: `A cone-shaped cup is made from a circular disk of radius <span class="eq">R = 10 cm</span> by cutting out
+        a sector. What cone height <strong>maximizes volume</strong>?`,
+      options: ["10/√3 ≈ 5.77 cm", "10√(2/3) ≈ 8.16 cm", "10 cm", "5 cm"],
+      correct: 0,
+      explanation: `Slant height = R = 10. So r² + h² = 100 → r² = 100 − h².<br>
+        <strong>V = πr²h/3 = π(100−h²)h/3 = π(100h − h³)/3</strong><br>
+        dV/dh = π(100 − 3h²)/3 = 0<br>
+        3h² = 100 → h² = 100/3<br>
+        ∴ <strong>h = 10/√3 = 10√3/3 ≈ 5.77 cm</strong>`,
+      hint: "The slant height of the cone equals the disk radius. Use r² + h² = R² to write volume V = πr²h/3 in terms of h alone."
+    },
+    {
+      type: "Hard — Word Problem",
+      difficulty: 4,
+      question: `A swimming pool is being filled at <strong>2 m³/min</strong>. The pool is shaped like an inverted cone:
+        depth <span class="eq">10 m</span>, top radius <span class="eq">5 m</span>. How fast is the water level rising
+        when the depth is <span class="eq">4 m</span>?`,
+      options: ["1/(2π) ≈ 0.159 m/min", "2/π m/min", "1/π m/min", "π/2 m/min"],
+      correct: 0,
+      explanation: `By similar triangles: r/h = 5/10 = 1/2, so r = h/2.<br>
+        <strong>V = πr²h/3 = π(h/2)²h/3 = πh³/12</strong><br>
+        dV/dt = πh²/4 · dh/dt<br>
+        2 = π(16)/4 · dh/dt = 4π · dh/dt<br>
+        ∴ <strong>dh/dt = 2/(4π) = 1/(2π) ≈ 0.159 m/min</strong>`,
+      hint: "Use similar triangles to relate r and h: r = h/2. Substitute into V = πr²h/3, then differentiate w.r.t. time."
+    },
+    {
+      type: "Hard",
+      difficulty: 3,
+      question: `Find the dimensions of the <strong>largest rectangle</strong> that can be inscribed in the
+        ellipse <span class="eq">x²/9 + y²/4 = 1</span>.`,
+      options: ["3√2 × 2√2", "6 × 4", "3 × 2", "3√3 × 2√3"],
+      correct: 0,
+      explanation: `Rectangle corners at (±x, ±y). Area = 4xy.<br>
+        From ellipse: y = 2√(1 − x²/9). So <strong>A = 8x√(1 − x²/9)</strong><br>
+        Maximize A² = 64x²(1 − x²/9) = 64x² − 64x⁴/9<br>
+        d(A²)/dx = 128x − 256x³/9 = 0<br>
+        128 = 256x²/9 → x² = 9/2 → x = 3/√2<br>
+        y = 2√(1 − 1/2) = 2/√2 = √2<br>
+        Width = 2x = 3√2, Height = 2y = 2√2<br>
+        ∴ <strong>Dimensions: 3√2 × 2√2</strong>`,
+      hint: "Place corners at (±x, ±y). Area = 4xy. Use the ellipse equation to write y in terms of x, then maximize."
     }
   ]
 };
@@ -815,17 +994,31 @@ function startGame(mode) {
 // ─────────────────────────────────────────────
 // LOAD QUESTION
 // ─────────────────────────────────────────────
+function getTimeForQuestion(q) {
+  const diff = q.difficulty || 1;
+  // Standard = 30s, Hard (3) = 45s, Hard Word Problem (4) = 60s
+  if (diff >= 4) return 60;
+  if (diff >= 3) return 45;
+  if (q.type === 'Word Problem') return 40;
+  return 30;
+}
+
 function loadQuestion() {
   const qs = QUESTIONS[state.mode];
   const q = qs[state.qIndex];
+  const timeForQ = getTimeForQuestion(q);
   state.answered = false;
   state.hintUsed = false;
-  state.timeLeft = 30;
+  state.timeLeft = timeForQ;
+  state.maxTime = timeForQ;
   state.qStartTime = Date.now();
 
   document.getElementById('q-tag').textContent =
     state.mode === 'implicit' ? 'Implicit Differentiation' : 'Optimization';
-  document.getElementById('q-type-label').textContent = q.type;
+  const diffLevel = q.difficulty || 1;
+  const diffLabel = diffLevel >= 4 ? '🔥 HARD' : diffLevel >= 3 ? '⚡ HARD' : q.type;
+  const timeLabel = ` • ${timeForQ}s`;
+  document.getElementById('q-type-label').textContent = diffLabel + timeLabel;
   document.getElementById('question-text').innerHTML = q.question;
   document.getElementById('hint-box').classList.remove('show');
   document.getElementById('hint-box').textContent = '';
@@ -873,10 +1066,13 @@ function updateTimerUI() {
   const circle = document.getElementById('timer-circle');
   const text = document.getElementById('timer-text');
   const max = 150.8;
-  const offset = max - (state.timeLeft / 30) * max;
+  const totalTime = state.maxTime || 30;
+  const offset = max - (state.timeLeft / totalTime) * max;
   circle.style.strokeDashoffset = offset;
 
-  const color = state.timeLeft > 15 ? '#00d4ff' : state.timeLeft > 7 ? '#f59e0b' : '#ef4444';
+  const halfTime = totalTime / 2;
+  const quarterTime = totalTime / 4;
+  const color = state.timeLeft > halfTime ? '#00d4ff' : state.timeLeft > quarterTime ? '#f59e0b' : '#ef4444';
   circle.style.stroke = color;
   text.style.color = color;
   text.textContent = state.timeLeft;
@@ -904,9 +1100,11 @@ function handleAnswer(chosen) {
   });
 
   if (isCorrect) {
+    const diffLevel = q.difficulty || 1;
+    const basePoints = diffLevel >= 4 ? 200 : diffLevel >= 3 ? 150 : 100;
     const timeBonus = Math.max(0, state.timeLeft * 2);
     const hintPenalty = state.hintUsed ? 25 : 0;
-    const points = 100 + timeBonus - hintPenalty;
+    const points = basePoints + timeBonus - hintPenalty;
     state.score += points;
     state.correctCount++;
     state.streak++;
