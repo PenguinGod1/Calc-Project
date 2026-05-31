@@ -941,6 +941,23 @@ let state = {
 };
 
 // ─────────────────────────────────────────────
+// SHUFFLE OPTIONS
+// ─────────────────────────────────────────────
+function shuffleOptions(options, correctIndex) {
+  // Build array of {text, isCorrect}
+  const items = options.map((opt, i) => ({ text: opt, isCorrect: i === correctIndex }));
+  // Fisher-Yates shuffle
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return {
+    options: items.map(it => it.text),
+    correct: items.findIndex(it => it.isCorrect)
+  };
+}
+
+// ─────────────────────────────────────────────
 // SCREENS
 // ─────────────────────────────────────────────
 function showScreen(id) {
@@ -1031,11 +1048,15 @@ function loadQuestion() {
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('hud-qnum').textContent = `${state.qIndex + 1} / ${qs.length}`;
 
+  // Shuffle options
+  const shuffled = shuffleOptions(q.options, q.correct);
+  state.shuffledCorrect = shuffled.correct;
+
   // Options
   const container = document.getElementById('options-container');
   container.innerHTML = '';
   const letters = ['A', 'B', 'C', 'D'];
-  q.options.forEach((opt, i) => {
+  shuffled.options.forEach((opt, i) => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
     btn.innerHTML = `<span class="opt-letter">${letters[i]}</span><span>${opt}</span>`;
@@ -1090,12 +1111,13 @@ function handleAnswer(chosen) {
   state.timesPerQ.push(elapsed);
 
   const q = QUESTIONS[state.mode][state.qIndex];
-  const isCorrect = chosen === q.correct;
+  const correctIdx = state.shuffledCorrect;
+  const isCorrect = chosen === correctIdx;
   const optBtns = document.querySelectorAll('.option-btn');
 
   optBtns.forEach((btn, i) => {
     btn.disabled = true;
-    if (i === q.correct) btn.classList.add('correct');
+    if (i === correctIdx) btn.classList.add('correct');
     else if (i === chosen && !isCorrect) btn.classList.add('wrong');
   });
 
